@@ -1,17 +1,15 @@
-import React, { useState } from 'react';
+import React  from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 
 export default function Header({language, onLanguageChange}) {
-    //const [language, setLanguage] = useState(props.language);
-
     return (
         <View style={styles.container}>
             <Text style={styles.titleText}>GitHub Trending Repositories</Text>
             <Text>Language:</Text>
             <Picker
                 selectedValue={language}
-                onValueChange={(itemValue, itemIndex) =>
+                onValueChange={(itemValue) =>
                     onLanguageChange(itemValue)
                 }
             >
@@ -37,10 +35,10 @@ export default function Header({language, onLanguageChange}) {
 
 const styles = StyleSheet.create({
     container: {
-      backgroundColor: '#7835ac',
-      height: 100,
-      width: '100%',
-      alignItems: 'center',
+        backgroundColor: '#7835ac',
+        height: 100,
+        width: '100%',
+        alignItems: 'center',
     },
     titleText: {
         textTransform: 'uppercase',
