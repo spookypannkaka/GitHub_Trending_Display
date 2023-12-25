@@ -1,11 +1,74 @@
+import React, { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { Octokit } from "octokit";
+import { GITHUB_TOKEN } from '@env';
+import Header from './components/Header'
+import RepoCard from './components/RepoCard'
+
+const octokit = new Octokit({ auth: GITHUB_TOKEN });
 
 export default function App() {
+  const [repositories, setRepositories] = useState([]);
+  const [language, setLanguage] = useState('overall');
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    fetchTrendingRepositories();
+  }, [language]); // Refetch when language or time period changes
+
+  const fetchTrendingRepositories = async () => {
+    let query = 'created:>2023-01-01'; // Default for 'Overall'
+    if (language && language !== 'overall') { // Check if a specific language is selected
+      query += ` language:${language}`;
+    }
+
+    try {
+      setIsLoading(true);
+      const response = await octokit.request('GET /search/repositories', {
+        q: query,
+        sort: 'stars',
+        order: 'desc'
+      });
+      setRepositories(response.data.items);
+    } catch (error) {
+      setError(error);
+      console.error("Error fetching repositories: ", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLanguageChange = (newLanguage) => {
+    setLanguage(newLanguage);
+  };
+
   return (
     <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
+      <Header
+        language={language}
+        onLanguageChange={handleLanguageChange}
+      />
+
+      {isLoading && (
+        <Text>Loading...</Text>
+      )}
+
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.cardContainer}>
+          {repositories.map(repo => (
+            <RepoCard
+              key={repo.id}
+              name={repo.name}
+              full_name={repo.full_name}
+              description={repo.description}
+              stargazers_count={repo.stargazers_count}
+              forks_count={repo.forks_count}
+            />
+          ))}
+        </View>
+      </ScrollView>
+      
     </View>
   );
 }
@@ -14,7 +77,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: '100%',
+    //alignItems: 'center',
   },
+  scrollView: {
+    flex: 1, // takes up the remaining space after the header
+  },
+  cardContainer: {
+    //flex: 1,
+    //justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+  }
 });
